@@ -37,9 +37,11 @@
         .mic-btn.recording { animation: pulse 1.5s infinite; background: #dc2626; }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         
+        #audio-playback-box { margin-top: 15px; text-align: center; display: none; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        #audio-playback-box audio { width: 100%; max-width: 300px; outline: none; margin-top: 5px; }
+
         #feedback-box { margin-top: 15px; padding: 15px; border-radius: 8px; background: #f1f5f9; display: none; font-family: 'Poppins'; font-size: 15px; line-height: 1.6; }
         .match-green { color: #16a34a; font-weight: bold; }
-        .match-red { color: #dc2626; text-decoration: underline; }
         
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); display: flex; justify-content: center; align-items: center; z-index: 2000; visibility: hidden; opacity: 0; transition: 0.3s; }
@@ -117,6 +119,11 @@
             <div id="status-text" style="font-size: 14px; font-weight: bold; color: #ef4444; margin-top: 10px;"></div>
         </div>
 
+        <div id="audio-playback-box">
+            <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">🎵 ฟังเสียงของตัวเองที่บันทึกไว้:</div>
+            <audio id="audioPlayer" controls></audio>
+        </div>
+
         <div id="feedback-box"></div>
         
         <button class="btn btn-green" id="submitBtn" style="display: none; margin-top: 15px;" onclick="prepareSubmit()">✅ ส่งคะแนน</button>
@@ -124,7 +131,6 @@
         <button class="btn" style="margin-top: 10px; background: #64748b;" onclick="editScript()">◀ กลับไปแก้ไขข้อความ</button>
     </div>
 
-    <!-- Modals -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal-box">
             <h2>👋 ลงชื่อก่อนส่งคะแนน</h2>
@@ -164,6 +170,9 @@
     let finalScore = 0;
     let isRecording = false;
     let recognition;
+    
+    let mediaRecorder;
+    let audioChunks = [];
 
     window.onload = () => {
         document.getElementById('m_room').addEventListener('blur', function() { this.value = autoFormatRoom(this.value); });
@@ -213,6 +222,7 @@
         document.getElementById('script-box').style.display = 'block';
         document.getElementById('mic-box').style.display = 'block';
         document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('audio-playback-box').style.display = 'none';
         document.getElementById('submitBtn').style.display = 'none';
         document.getElementById('retryBtn').style.display = 'none';
     }
@@ -220,11 +230,12 @@
     function editScript() {
         document.getElementById('step2-container').style.display = 'none';
         document.getElementById('step1-container').style.display = 'block';
-        if(isRecording) recognition.stop();
+        if(isRecording) { recognition.stop(); if(mediaRecorder) mediaRecorder.stop(); }
     }
 
     function retryReading() {
         document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('audio-playback-box').style.display = 'none';
         document.getElementById('submitBtn').style.display = 'none';
         document.getElementById('retryBtn').style.display = 'none';
         document.getElementById('status-text').innerText = "";
@@ -239,8 +250,8 @@
         }
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
-        recognition.continuous = true; // เปิดให้ฟังต่อเนื่องแม้หยุดหายใจ
-        recognition.interimResults = true; // แสดงผลระหว่างพูด
+        recognition.continuous = true;
+        recognition.interimResults = true;
 
         recognition.onstart = function() {
             isRecording = true;
@@ -249,6 +260,7 @@
             document.getElementById('submitBtn').style.display = 'none';
             document.getElementById('retryBtn').style.display = 'none';
             document.getElementById('feedback-box').style.display = 'none';
+            document.getElementById('audio-playback-box').style.display = 'none';
         };
 
         recognition.onresult = function(event) {
@@ -272,11 +284,27 @@
         };
     }
 
-    function toggleRecording() {
+    async function toggleRecording() {
         if (isRecording) { 
             recognition.stop(); 
+            if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
         } else { 
-            recognition.start(); 
+            audioChunks = [];
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audioPlayer').src = audioUrl;
+                    document.getElementById('audio-playback-box').style.display = 'block';
+                };
+                mediaRecorder.start();
+                recognition.start(); 
+            } catch(err) {
+                alert("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาตรวจสอบสิทธิ์ของเบราว์เซอร์");
+            }
         }
     }
 
@@ -297,16 +325,13 @@
         let htmlResult = "<strong>ผลการอ่าน:</strong><br><br>";
 
         scriptWords.forEach(word => {
-            // หาคำที่พูดตรงกัน โดยค้นหาเรียงไปข้างหน้าเท่านั้น (ป้องกันการเขียวซ้ำรวนไปทั้งย่อหน้า)
             let foundIndex = spokenWords.indexOf(word, spokenIndex);
-            
-            // อนุญาตให้ข้ามคำที่อ่านผิดได้ไม่เกิน 5 คำ เพื่อไม่ให้ระบบข้ามประโยคไปไกลเกิน
             if (foundIndex !== -1 && foundIndex <= spokenIndex + 5) { 
                 matchCount++;
                 htmlResult += `<span class="match-green">${word}</span> `;
                 spokenIndex = foundIndex + 1;
             } else {
-                htmlResult += `<span style="color:#94a3b8;">${word}</span> `; // สีเทาสำหรับคำที่ข้าม/อ่านผิด/ยังไม่อ่าน
+                htmlResult += `<span style="color:#94a3b8;">${word}</span> `; 
             }
         });
 
