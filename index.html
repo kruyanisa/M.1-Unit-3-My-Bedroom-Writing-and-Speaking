@@ -27,7 +27,8 @@
         .btn:disabled { background: #94a3b8; cursor: not-allowed; }
         .btn-green { background: #10b981; }
         .btn-green:hover { background: #059669; }
-        .btn-red { background: #ef4444; }
+        .btn-orange { background: #f97316; }
+        .btn-orange:hover { background: #ea580c; }
         
         #script-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 2px dashed #94a3b8; margin: 15px 0; font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.6; color: #0f172a; display: none; }
         
@@ -111,7 +112,7 @@
         <div id="script-box"></div>
         
         <div class="mic-box" id="mic-box">
-            <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">กดไมค์แล้วอ่านออกเสียงให้ชัดเจน</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">กดไมค์เพื่อเริ่มพูด และ <strong>กดอีกครั้งเมื่อพูดจบ</strong></div>
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎙️</button>
             <div id="status-text" style="font-size: 14px; font-weight: bold; color: #ef4444; margin-top: 10px;"></div>
         </div>
@@ -119,6 +120,7 @@
         <div id="feedback-box"></div>
         
         <button class="btn btn-green" id="submitBtn" style="display: none; margin-top: 15px;" onclick="prepareSubmit()">✅ ส่งคะแนน</button>
+        <button class="btn btn-orange" id="retryBtn" style="display: none;" onclick="retryReading()">🔄 อ่านใหม่</button>
         <button class="btn" style="margin-top: 10px; background: #64748b;" onclick="editScript()">◀ กลับไปแก้ไขข้อความ</button>
     </div>
 
@@ -212,12 +214,21 @@
         document.getElementById('mic-box').style.display = 'block';
         document.getElementById('feedback-box').style.display = 'none';
         document.getElementById('submitBtn').style.display = 'none';
+        document.getElementById('retryBtn').style.display = 'none';
     }
 
     function editScript() {
         document.getElementById('step2-container').style.display = 'none';
         document.getElementById('step1-container').style.display = 'block';
         if(isRecording) recognition.stop();
+    }
+
+    function retryReading() {
+        document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('submitBtn').style.display = 'none';
+        document.getElementById('retryBtn').style.display = 'none';
+        document.getElementById('status-text').innerText = "";
+        finalScore = 0;
     }
 
     function setupSpeechRecognition() {
@@ -228,18 +239,24 @@
         }
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        recognition.continuous = true; // เปิดให้ฟังต่อเนื่องแม้หยุดหายใจ
+        recognition.interimResults = true; // แสดงผลระหว่างพูด
 
         recognition.onstart = function() {
             isRecording = true;
             document.getElementById('micBtn').classList.add('recording');
-            document.getElementById('status-text').innerText = "กำลังฟัง... (พูดให้จบประโยค)";
+            document.getElementById('status-text').innerText = "กำลังฟัง... (กดไมค์อีกครั้งเมื่ออ่านจบ)";
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('retryBtn').style.display = 'none';
+            document.getElementById('feedback-box').style.display = 'none';
         };
 
         recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            checkPronunciation(transcript);
+            let currentTranscript = "";
+            for (let i = 0; i < event.results.length; ++i) {
+                currentTranscript += event.results[i][0].transcript + " ";
+            }
+            checkPronunciation(currentTranscript);
         };
 
         recognition.onerror = function(event) {
@@ -249,24 +266,26 @@
 
         recognition.onend = function() {
             resetMic();
+            document.getElementById('status-text').innerText = "ประมวลผลเสร็จสิ้น";
+            document.getElementById('submitBtn').style.display = 'block';
+            document.getElementById('retryBtn').style.display = 'block';
         };
     }
 
     function toggleRecording() {
-        if (isRecording) { recognition.stop(); } 
-        else { recognition.start(); }
+        if (isRecording) { 
+            recognition.stop(); 
+        } else { 
+            recognition.start(); 
+        }
     }
 
     function resetMic() {
         isRecording = false;
         document.getElementById('micBtn').classList.remove('recording');
-        if(document.getElementById('status-text').innerText === "กำลังฟัง... (พูดให้จบประโยค)") {
-            document.getElementById('status-text').innerText = "";
-        }
     }
 
     function checkPronunciation(spokenText) {
-        // ทำความสะอาดข้อความ ตัดเครื่องหมายวรรคตอน
         const cleanScript = generatedText.toLowerCase().replace(/[.,!]/g, '');
         const cleanSpoken = spokenText.toLowerCase().replace(/[.,!]/g, '');
         
@@ -277,7 +296,6 @@
         let htmlResult = "<strong>ผลการอ่าน:</strong><br><br>";
 
         scriptWords.forEach(word => {
-            // เช็คว่าคำที่ต้องพูด มีอยู่ในสิ่งที่พูดออกมาไหม (แบบยืดหยุ่น ไม่สนลำดับเป๊ะๆ)
             if (spokenWords.includes(word)) {
                 matchCount++;
                 htmlResult += `<span class="match-green">${word}</span> `;
@@ -286,7 +304,6 @@
             }
         });
 
-        // คำนวณคะแนน (เต็ม 10)
         let percent = matchCount / scriptWords.length;
         finalScore = Math.round(percent * 10);
         
@@ -295,7 +312,6 @@
 
         document.getElementById('feedback-box').innerHTML = htmlResult;
         document.getElementById('feedback-box').style.display = 'block';
-        document.getElementById('submitBtn').style.display = 'block';
     }
 
     function prepareSubmit() {
@@ -357,7 +373,7 @@
 
     function restartApp() {
         document.getElementById('scoreModal').classList.remove('active');
-        editScript(); // กลับไปหน้าแรก
+        editScript(); 
     }
 </script>
 </body>
