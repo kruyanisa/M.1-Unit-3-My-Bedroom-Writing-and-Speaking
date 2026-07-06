@@ -293,14 +293,20 @@
         const spokenWords = cleanSpoken.split(/\s+/);
         
         let matchCount = 0;
+        let spokenIndex = 0;
         let htmlResult = "<strong>ผลการอ่าน:</strong><br><br>";
 
         scriptWords.forEach(word => {
-            if (spokenWords.includes(word)) {
+            // หาคำที่พูดตรงกัน โดยค้นหาเรียงไปข้างหน้าเท่านั้น (ป้องกันการเขียวซ้ำรวนไปทั้งย่อหน้า)
+            let foundIndex = spokenWords.indexOf(word, spokenIndex);
+            
+            // อนุญาตให้ข้ามคำที่อ่านผิดได้ไม่เกิน 5 คำ เพื่อไม่ให้ระบบข้ามประโยคไปไกลเกิน
+            if (foundIndex !== -1 && foundIndex <= spokenIndex + 5) { 
                 matchCount++;
                 htmlResult += `<span class="match-green">${word}</span> `;
+                spokenIndex = foundIndex + 1;
             } else {
-                htmlResult += `<span class="match-red">${word}</span> `;
+                htmlResult += `<span style="color:#94a3b8;">${word}</span> `; // สีเทาสำหรับคำที่ข้าม/อ่านผิด/ยังไม่อ่าน
             }
         });
 
@@ -308,7 +314,7 @@
         finalScore = Math.round(percent * 10);
         
         htmlResult += `<br><br><div style="text-align:center; font-size:18px;">คะแนนความแม่นยำ: <strong>${finalScore} / 10</strong></div>`;
-        htmlResult += `<div style="font-size:12px; color:#64748b; text-align:center; margin-top:5px;">(สีเขียว=ผ่าน, สีแดง=ระบบไม่ได้ยินคำนี้)</div>`;
+        htmlResult += `<div style="font-size:12px; color:#64748b; text-align:center; margin-top:5px;">(สีเขียว = อ่านถูก, สีเทา = อ่านผิด/ข้าม/ยังไม่อ่าน)</div>`;
 
         document.getElementById('feedback-box').innerHTML = htmlResult;
         document.getElementById('feedback-box').style.display = 'block';
