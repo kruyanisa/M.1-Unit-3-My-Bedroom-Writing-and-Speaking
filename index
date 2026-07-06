@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ม.1 Unit 3 My Bedroom Writing and Speaking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #f0fdf4; font-family: 'Sarabun', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 15px 5px; min-height: 100vh; }
+        
+        .header-container { text-align: center; margin-bottom: 5px; width: 100%; }
+        .welcome-text { font-size: 12px; font-weight: 600; color: #065f46; background: #fff; padding: 4px 10px; border-radius: 50px; display: inline-flex; gap: 8px; border: 2px solid #a7f3d0; }
+        .logout-btn { cursor: pointer; border: none; background: #ef4444; color: white; border-radius: 6px; padding: 2px 6px; font-size: 11px; font-family: 'Sarabun'; }
+
+        h2.title { color: #fff; background: #f97316; padding: 8px 15px; border-radius: 20px; margin: 0 0 15px 0; font-size: 16px; text-align: center; border: 2px solid #fff; width: 95%; max-width: 600px; }
+        
+        .app-container { width: 95%; max-width: 600px; background: #fff; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); padding: 20px; border: 2px solid #bbf7d0; margin-bottom: 20px; }
+        
+        .step-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        
+        .form-group { margin-bottom: 12px; font-size: 15px; color: #334155; line-height: 2; }
+        select { padding: 5px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: 'Poppins'; font-size: 14px; background: #f8fafc; outline: none;}
+        
+        .btn { background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; font-family: 'Sarabun'; transition: 0.2s; }
+        .btn:hover { background: #2563eb; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-green { background: #10b981; }
+        .btn-green:hover { background: #059669; }
+        .btn-red { background: #ef4444; }
+        
+        #script-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 2px dashed #94a3b8; margin: 15px 0; font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.6; color: #0f172a; display: none; }
+        
+        .mic-box { text-align: center; margin-top: 15px; display: none; }
+        .mic-btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: #ef4444; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(239,68,68,0.4); transition: 0.3s; }
+        .mic-btn.recording { animation: pulse 1.5s infinite; background: #dc2626; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        #feedback-box { margin-top: 15px; padding: 15px; border-radius: 8px; background: #f1f5f9; display: none; font-family: 'Poppins'; font-size: 15px; line-height: 1.6; }
+        .match-green { color: #16a34a; font-weight: bold; }
+        .match-red { color: #dc2626; text-decoration: underline; }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); display: flex; justify-content: center; align-items: center; z-index: 2000; visibility: hidden; opacity: 0; transition: 0.3s; }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .modal-box { background: white; padding: 20px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; border: 4px solid #f97316; }
+        .modal-box h2 { color: #ea580c; margin-top: 0; font-size: 18px; }
+        .modal-box input { width: 100%; padding: 8px; margin-bottom: 10px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 12px; text-align: center; font-family: 'Sarabun'; }
+        .action-btn { width: 100%; padding: 10px; background: #f97316; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 5px; font-family: 'Sarabun';}
+        .action-btn.secondary { background: #64748b; }
+        .score-number { color: #ea580c; font-size: 35px; font-weight: 800; display: block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container" id="welcome-section" style="display: none;">
+        <div class="welcome-text">
+            👤 <span id="show_name"></span> | 🏫 <span id="show_room"></span> | 🆔 <span id="show_id"></span>
+            <button class="logout-btn" onclick="logoutUser()">สลับบัญชี</button>
+        </div>
+    </div>
+
+    <h2 class="title">📍 ม.1 Unit 3 My Bedroom Writing and Speaking</h2>
+
+    <div class="app-container" id="step1-container">
+        <div class="step-title">✍️ Step 1: Write about your bedroom</div>
+        
+        <div class="form-group">
+            1. My bedroom is 
+            <select id="s1">
+                <option value="great">great</option><option value="nice">nice</option>
+                <option value="big">big</option><option value="small">small</option>
+            </select>.
+        </div>
+        <div class="form-group">
+            2. Everything is 
+            <select id="s2">
+                <option value="pink">pink</option><option value="blue">blue</option>
+                <option value="green">green</option><option value="yellow">yellow</option>
+                <option value="white">white</option>
+            </select> in my bedroom.
+        </div>
+        <div class="form-group">
+            3. I’ve got a bed, a desk, and a 
+            <select id="s3">
+                <option value="wardrobe">wardrobe</option><option value="bookcase">bookcase</option>
+                <option value="chair">chair</option><option value="sofa">sofa</option>
+            </select>.
+        </div>
+        <div class="form-group">
+            4. The bed is 
+            <select id="s4">
+                <option value="next to">next to</option><option value="under">under</option>
+                <option value="behind">behind</option><option value="in front of">in front of</option>
+            </select> the 
+            <select id="s5">
+                <option value="wardrobe">wardrobe</option><option value="window">window</option>
+                <option value="desk">desk</option><option value="door">door</option>
+            </select>.
+        </div>
+        <div class="form-group">
+            5. I like my bedroom very much.
+        </div>
+        
+        <button class="btn" onclick="generateScript()">📝 สร้างบทอ่าน (Generate)</button>
+    </div>
+
+    <div class="app-container" id="step2-container" style="display: none;">
+        <div class="step-title">🗣️ Step 2: Read your story</div>
+        
+        <div id="script-box"></div>
+        
+        <div class="mic-box" id="mic-box">
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">กดไมค์แล้วอ่านออกเสียงให้ชัดเจน</div>
+            <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎙️</button>
+            <div id="status-text" style="font-size: 14px; font-weight: bold; color: #ef4444; margin-top: 10px;"></div>
+        </div>
+
+        <div id="feedback-box"></div>
+        
+        <button class="btn btn-green" id="submitBtn" style="display: none; margin-top: 15px;" onclick="prepareSubmit()">✅ ส่งคะแนน</button>
+        <button class="btn" style="margin-top: 10px; background: #64748b;" onclick="editScript()">◀ กลับไปแก้ไขข้อความ</button>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-box">
+            <h2>👋 ลงชื่อก่อนส่งคะแนน</h2>
+            <input type="text" id="m_name" placeholder="ชื่อ - นามสกุล" autocomplete="name">
+            <input type="text" id="m_room" placeholder="ชั้น/ห้อง (เช่น 1/1)">
+            <input type="text" id="m_id" placeholder="รหัสนักเรียน (5 หลัก)" maxlength="5">
+            <button class="action-btn" onclick="saveUserDataAndSubmit()">🚀 ยืนยันและส่งคะแนน</button>
+            <div id="modal-err" style="color:#ef4444; font-size:12px; margin-top:10px; display:none;"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="scoreModal">
+        <div class="modal-box">
+            <h2>🎉 Finished!</h2>
+            <div style="font-size: 16px; font-weight: bold;">คะแนนการอ่านของคุณ</div>
+            <span class="score-number" id="finalScore">0 / 10</span>
+            <div id="saveStatus" style="font-size: 12px; color: #ea580c; font-weight: bold; margin-bottom: 10px; display: none;">⏳ กำลังบันทึก...</div>
+            <button class="action-btn" id="playAgainBtn" onclick="restartApp()" style="display:none;">🔄 ทำอีกครั้ง</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-box">
+            <h2>❓ เปลี่ยนชื่อผู้เล่น</h2>
+            <div style="font-size: 14px; margin-bottom: 20px;">ข้อมูลเดิมจะถูกลบออกทั้งหมด</div>
+            <button class="action-btn" onclick="confirmLogout()">✔️ ยืนยัน</button>
+            <button class="action-btn secondary" onclick="closeLogout()">❌ ยกเลิก</button>
+        </div>
+    </div>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxd_UGE1ZY_1dcB3B7l0Vy8azxhuuFoc_kftJ7QZ1Nc4XIaXGKF9RPs8WxhZ0K5VyVN/exec';
+    const LESSON_NAME = "ม.1 Unit 3 My Bedroom";
+
+    let studentData = { name: "", room: "", id: "" };
+    let generatedText = "";
+    let finalScore = 0;
+    let isRecording = false;
+    let recognition;
+
+    window.onload = () => {
+        document.getElementById('m_room').addEventListener('blur', function() { this.value = autoFormatRoom(this.value); });
+        if(localStorage.getItem('studentName')) {
+            studentData.name = localStorage.getItem('studentName');
+            studentData.room = localStorage.getItem('studentRoom');
+            studentData.id = localStorage.getItem('studentId');
+            updateHeader();
+        }
+        setupSpeechRecognition();
+    };
+
+    function autoFormatRoom(val) {
+        let nums = val.trim().match(/\d+/g);
+        if (nums && nums.length >= 2) return `ม.${nums[0]}/${nums[1]}`;
+        if (nums && nums.length === 1) return `ม.${nums[0]}`;
+        return val.trim();
+    }
+
+    function updateHeader() {
+        document.getElementById('show_name').innerText = studentData.name;
+        document.getElementById('show_room').innerText = studentData.room;
+        document.getElementById('show_id').innerText = studentData.id;
+        document.getElementById('welcome-section').style.display = 'block';
+    }
+
+    function logoutUser() { document.getElementById('logoutModal').classList.add('active'); }
+    function closeLogout() { document.getElementById('logoutModal').classList.remove('active'); }
+    function confirmLogout() {
+        localStorage.clear(); studentData = { name: "", room: "", id: "" };
+        document.getElementById('welcome-section').style.display = 'none';
+        closeLogout(); restartApp();
+    }
+
+    function generateScript() {
+        const v1 = document.getElementById('s1').value;
+        const v2 = document.getElementById('s2').value;
+        const v3 = document.getElementById('s3').value;
+        const v4 = document.getElementById('s4').value;
+        const v5 = document.getElementById('s5').value;
+
+        generatedText = `My bedroom is ${v1}. Everything is ${v2} in my bedroom. I have got a bed, a desk, and a ${v3}. The bed is ${v4} the ${v5}. I like my bedroom very much.`;
+        
+        document.getElementById('script-box').innerText = generatedText;
+        document.getElementById('step1-container').style.display = 'none';
+        document.getElementById('step2-container').style.display = 'block';
+        document.getElementById('script-box').style.display = 'block';
+        document.getElementById('mic-box').style.display = 'block';
+        document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('submitBtn').style.display = 'none';
+    }
+
+    function editScript() {
+        document.getElementById('step2-container').style.display = 'none';
+        document.getElementById('step1-container').style.display = 'block';
+        if(isRecording) recognition.stop();
+    }
+
+    function setupSpeechRecognition() {
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!window.SpeechRecognition) {
+            document.getElementById('mic-box').innerHTML = "<div style='color:red'>เบราว์เซอร์นี้ไม่รองรับระบบเสียง แนะนำให้ใช้ Google Chrome ครับ</div>";
+            return;
+        }
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = function() {
+            isRecording = true;
+            document.getElementById('micBtn').classList.add('recording');
+            document.getElementById('status-text').innerText = "กำลังฟัง... (พูดให้จบประโยค)";
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            checkPronunciation(transcript);
+        };
+
+        recognition.onerror = function(event) {
+            document.getElementById('status-text').innerText = "เกิดข้อผิดพลาด กรุณากดพูดใหม่";
+            resetMic();
+        };
+
+        recognition.onend = function() {
+            resetMic();
+        };
+    }
+
+    function toggleRecording() {
+        if (isRecording) { recognition.stop(); } 
+        else { recognition.start(); }
+    }
+
+    function resetMic() {
+        isRecording = false;
+        document.getElementById('micBtn').classList.remove('recording');
+        if(document.getElementById('status-text').innerText === "กำลังฟัง... (พูดให้จบประโยค)") {
+            document.getElementById('status-text').innerText = "";
+        }
+    }
+
+    function checkPronunciation(spokenText) {
+        // ทำความสะอาดข้อความ ตัดเครื่องหมายวรรคตอน
+        const cleanScript = generatedText.toLowerCase().replace(/[.,!]/g, '');
+        const cleanSpoken = spokenText.toLowerCase().replace(/[.,!]/g, '');
+        
+        const scriptWords = cleanScript.split(/\s+/);
+        const spokenWords = cleanSpoken.split(/\s+/);
+        
+        let matchCount = 0;
+        let htmlResult = "<strong>ผลการอ่าน:</strong><br><br>";
+
+        scriptWords.forEach(word => {
+            // เช็คว่าคำที่ต้องพูด มีอยู่ในสิ่งที่พูดออกมาไหม (แบบยืดหยุ่น ไม่สนลำดับเป๊ะๆ)
+            if (spokenWords.includes(word)) {
+                matchCount++;
+                htmlResult += `<span class="match-green">${word}</span> `;
+            } else {
+                htmlResult += `<span class="match-red">${word}</span> `;
+            }
+        });
+
+        // คำนวณคะแนน (เต็ม 10)
+        let percent = matchCount / scriptWords.length;
+        finalScore = Math.round(percent * 10);
+        
+        htmlResult += `<br><br><div style="text-align:center; font-size:18px;">คะแนนความแม่นยำ: <strong>${finalScore} / 10</strong></div>`;
+        htmlResult += `<div style="font-size:12px; color:#64748b; text-align:center; margin-top:5px;">(สีเขียว=ผ่าน, สีแดง=ระบบไม่ได้ยินคำนี้)</div>`;
+
+        document.getElementById('feedback-box').innerHTML = htmlResult;
+        document.getElementById('feedback-box').style.display = 'block';
+        document.getElementById('submitBtn').style.display = 'block';
+    }
+
+    function prepareSubmit() {
+        document.getElementById('finalScore').innerText = `${finalScore} / 10`;
+        if (studentData.id) {
+            document.getElementById('scoreModal').classList.add('active'); 
+            submitScore();
+        } else { 
+            document.getElementById('loginModal').classList.add('active'); 
+        }
+    }
+
+    function saveUserDataAndSubmit() {
+        let n = document.getElementById('m_name').value.trim(), r = autoFormatRoom(document.getElementById('m_room').value), i = document.getElementById('m_id').value.trim();
+        let err = document.getElementById('modal-err');
+        if(!n || !r || i.length !== 5) { err.innerText = "กรุณากรอกให้ครบ (รหัส 5 หลัก)"; err.style.display = 'block'; return; }
+        err.style.display = 'none';
+        
+        studentData = { name: n, room: r, id: i };
+        localStorage.setItem('studentName', n); 
+        localStorage.setItem('studentRoom', r); 
+        localStorage.setItem('studentId', i);
+        
+        document.getElementById('loginModal').classList.remove('active');
+        updateHeader(); 
+        document.getElementById('scoreModal').classList.add('active');
+        submitScore();
+    }
+
+    async function submitScore() {
+        let stat = document.getElementById('saveStatus'), playBtn = document.getElementById('playAgainBtn');
+        stat.style.display = 'block'; stat.innerText = "⏳ กำลังบันทึกคะแนน..."; playBtn.style.display = 'none';
+        
+        const payload = { 
+            name: studentData.name, 
+            room: studentData.room, 
+            studentId: "'" + studentData.id, 
+            lesson: LESSON_NAME, 
+            score: finalScore, 
+            maxScore: 10, 
+            _t: new Date().getTime() 
+        };
+        
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify(payload), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
+            stat.innerText = '✅ บันทึกคะแนนเรียบร้อย!'; 
+            stat.style.color = '#10b981';
+        } catch(e) { 
+            stat.innerText = '❌ ส่งไม่สำเร็จ'; 
+            stat.style.color = '#ef4444'; 
+        }
+        playBtn.style.display = 'inline-block';
+    }
+
+    function restartApp() {
+        document.getElementById('scoreModal').classList.remove('active');
+        editScript(); // กลับไปหน้าแรก
+    }
+</script>
+</body>
+</html>
